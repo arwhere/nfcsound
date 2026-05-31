@@ -7,81 +7,115 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>SoundTag</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             background: #000;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
             flex-direction: column;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
+            position: relative;
         }
-        button {
-            padding: 30px 50px;
-            font-size: 24px;
-            border: 3px solid white;
-            background: transparent;
+
+        /* КНОПКА НА ВСЮ СТРАНИЦУ */
+        #playBtn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #111;
             color: white;
-            border-radius: 50px;
+            font-size: 28px;
             cursor: pointer;
-            touch-action: manipulation;
+            z-index: 1;
         }
-        button:active {
+        #playBtn:active {
             background: #222;
         }
+
+        /* КНОПКА ЗАГЛУШИТЬ ПО ЦЕНТРУ */
+        #muteBtn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            border: 2px solid #ff3333;
+            background: transparent;
+            color: #ff3333;
+            font-size: 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 2;
+            display: none;
+            text-decoration: none;
+        }
+        #muteBtn:active {
+            background: rgba(255, 51, 51, 0.2);
+        }
+
         #status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             color: gray;
-            margin-top: 20px;
             font-family: sans-serif;
             font-size: 14px;
+            z-index: 3;
         }
     </style>
 </head>
 <body>
-    <button id="playBtn">▶ ВКЛЮЧИТЬ ЗВУК</button>
-    <div id="status">Нажми кнопку для запуска</div>
+    <div id="status">Нажми в любом месте для запуска</div>
+    <button id="playBtn">▶ НАЖМИ ДЛЯ ЗАПУСКА</button>
+    <a id="muteBtn" href="https://t.me/arwhere" target="_blank">🔇 ЗАГЛУШИТЬ</a>
 
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('SW зарегистрирован', reg))
                 .catch(err => console.log('SW ошибка', err));
         }
 
         const audio = new Audio('sound.mp3');
         audio.loop = true;
-        audio.playbackRate = 1.0;
         audio.preload = 'auto';
 
         const playBtn = document.getElementById('playBtn');
+        const muteBtn = document.getElementById('muteBtn');
         const status = document.getElementById('status');
 
         playBtn.addEventListener('click', () => {
             audio.play()
                 .then(() => {
-                    status.textContent = '🔊 Играет (можно свернуть браузер)';
+                    playBtn.style.display = 'none';
+                    muteBtn.style.display = 'block';
+                    status.textContent = '🔊 Играет';
                 })
                 .catch(e => {
                     status.textContent = 'Ошибка: ' + e.message;
                 });
         });
 
-        // Media Session API — кнопки в уведомлении/на локскрине
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: 'Мой звук',
-                artist: 'NFC Метка',
+                artist: 'arwhere',
                 album: 'SoundTag',
             });
             navigator.mediaSession.setActionHandler('play', () => audio.play());
             navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-            navigator.mediaSession.setActionHandler('stop', () => {
-                audio.pause();
-                audio.currentTime = 0;
-            });
         }
     </script>
 </body>
