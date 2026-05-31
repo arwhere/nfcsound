@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>SoundTag</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        button {
+            padding: 30px 50px;
+            font-size: 24px;
+            border: 3px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        button:active {
+            background: #222;
+        }
+        #status {
+            color: gray;
+            margin-top: 20px;
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <button id="playBtn">▶ ВКЛЮЧИТЬ ЗВУК</button>
+    <div id="status">Нажми кнопку для запуска</div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW зарегистрирован', reg))
+                .catch(err => console.log('SW ошибка', err));
+        }
+
+        const audio = new Audio('sound.mp3');
+        audio.loop = true;
+        audio.playbackRate = 1.0;
+        audio.preload = 'auto';
+
+        const playBtn = document.getElementById('playBtn');
+        const status = document.getElementById('status');
+
+        playBtn.addEventListener('click', () => {
+            audio.play()
+                .then(() => {
+                    status.textContent = '🔊 Играет (можно свернуть браузер)';
+                })
+                .catch(e => {
+                    status.textContent = 'Ошибка: ' + e.message;
+                });
+        });
+
+        // Media Session API — кнопки в уведомлении/на локскрине
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'Мой звук',
+                artist: 'NFC Метка',
+                album: 'SoundTag',
+            });
+            navigator.mediaSession.setActionHandler('play', () => audio.play());
+            navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+            navigator.mediaSession.setActionHandler('stop', () => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        }
+    </script>
+</body>
+</html>
